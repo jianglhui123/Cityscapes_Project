@@ -1,0 +1,35 @@
+# 项目配置
+project:
+  name: "Cityscapes_Semantic_Segmentation"
+  description: "室外场景语义分割项目"
+
+# 数据配置
+data:
+  root_dir: "/home/jianglh1/Cityscapes/data"
+  img_size: [512, 1024]  # 高度, 宽度 - 原始是1024x2048，缩小一半加速训练
+  batch_size: 8
+  num_workers: 4
+  use_augmentation: true
+
+# 模型配置
+model:
+  name: "unet"
+  num_classes: 19
+  pretrained: false
+
+# 训练配置
+training:
+  num_epochs: 20  # 先训练20个epoch看看效果
+  learning_rate: 0.001
+  weight_decay: 1e-4
+  device: "cuda"
+  
+# 保存配置
+save:
+  dir: "./results"
+  save_frequency: 5
+  
+# 实验跟踪
+logging:
+  use_wandb: false
+  wandb_project: "cityscapes_segmentation"
