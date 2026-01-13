@@ -21,7 +21,7 @@ model:
 # 训练配置
 training:
   num_epochs: 40  # 增加epoch数
-  learning_rate: 0.005
+  learning_rate: 0.01
   weight_decay: 0.0005  # 增加权重衰减
   device: "cuda"
   
@@ -38,7 +38,7 @@ training:
   
 # 保存配置
 save:
-  dir: "./results1"
+  dir: "./results2"
   save_frequency: 5
   
 # 实验跟踪

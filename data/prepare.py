@@ -3,7 +3,11 @@ import json
 import numpy as np
 from PIL import Image
 import cv2
+import matplotlib
 import matplotlib.pyplot as plt
+
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
 class CityscapesPreparer:
     def __init__(self, data_root='/home/jianglh1/Cityscapes/data'):

@@ -38,8 +38,20 @@ def main():
     
     # 准备数据
     print("加载数据集...")
-    train_transform = get_transforms('train', data_config['img_size'])
-    val_transform = get_transforms('val', data_config['img_size'])
+    
+    # 获取是否使用强数据增强的配置
+    use_strong_aug = data_config.get('use_strong_aug', False)
+    
+    train_transform = get_transforms(
+        'train', 
+        tuple(data_config['img_size']), 
+        use_strong_aug=use_strong_aug
+    )
+    val_transform = get_transforms(
+        'val', 
+        tuple(data_config['img_size']), 
+        use_strong_aug=False  # 验证集不使用强增强
+    )
     
     train_dataset = CityscapesDataset(
         root_dir=data_config['root_dir'],
@@ -90,15 +102,24 @@ def main():
         start_epoch = 0
         best_miou = 0
     
-    # 创建训练器
+    # 创建训练器配置
     trainer_config = {
         'num_epochs': training_config['num_epochs'],
         'learning_rate': training_config['learning_rate'],
         'weight_decay': training_config['weight_decay'],
         'batch_size': data_config['batch_size'],
-        'save_dir': save_config['dir']
+        'save_dir': save_config['dir'],
+        
+        # 添加新的配置项
+        'optimizer': training_config.get('optimizer', 'adamw'),
+        'scheduler': training_config.get('scheduler', 'plateau'),
+        'use_amp': training_config.get('use_amp', True),
+        
+        # 传递scheduler_config（如果有）
+        'scheduler_config': training_config.get('scheduler_config', {})
     }
     
+    # 创建训练器
     trainer = Trainer(model, train_loader, val_loader, trainer_config)
     
     # 训练

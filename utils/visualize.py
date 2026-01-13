@@ -1,7 +1,11 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import os
+
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
 def plot_training_history(train_losses, val_losses, val_mious, save_path=None):
     """绘制训练历史"""

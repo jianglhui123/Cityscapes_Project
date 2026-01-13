@@ -8,6 +8,8 @@ import time
 from tqdm import tqdm
 
 from utils.metrics import calculate_iou, calculate_pixel_accuracy
+from .optimizer import create_optimizer, create_scheduler
+from torch.cuda.amp import autocast, GradScaler
 
 class Trainer:
     def __init__(self, model, train_loader, val_loader, config):
@@ -34,21 +36,29 @@ class Trainer:
         # 损失函数 - 忽略255（ignore类）
         self.criterion = nn.CrossEntropyLoss(ignore_index=255)
         
-        # 优化器（确保参数是浮点数）
-        self.optimizer = optim.AdamW(
-            model.parameters(), 
-            lr=float(self.config['learning_rate']),
-            weight_decay=float(self.config['weight_decay'])
-        )
+        # 混合精度训练设置
+        self.use_amp = config.get('use_amp', True) and torch.cuda.is_available()
+        if self.use_amp:
+            self.scaler = GradScaler()
+            print("启用混合精度训练 (AMP)")
+        else:
+            self.scaler = None
         
-        # 学习率调度器
-        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, 
-            mode='max', 
-            factor=0.5, 
-            patience=5, 
-            verbose=True
-        )
+        # 创建优化器（使用新的函数）
+        self.optimizer = create_optimizer(model, config)
+        
+        # 创建调度器（需要知道每个epoch的步数）
+        self.scheduler_type = config.get('scheduler', 'plateau')
+        if self.scheduler_type == 'onecycle':
+            # OneCycleLR需要在训练开始前知道steps_per_epoch
+            self.steps_per_epoch = len(train_loader)
+            self.scheduler = create_scheduler(
+                self.optimizer, 
+                config, 
+                steps_per_epoch=self.steps_per_epoch
+            )
+        else:
+            self.scheduler = create_scheduler(self.optimizer, config)
         
         # 训练记录
         self.train_losses = []
@@ -79,28 +89,42 @@ class Trainer:
         self.config.setdefault('save_dir', './results')
     
     def train_epoch(self):
-        """训练一个epoch"""
-        self.model.train()  # 将神经网络切换到训练模式，影响模型中Dropout层和BatchNorm层
+        """训练一个epoch（支持混合精度）"""
+        self.model.train()
         total_loss = 0
-        progress_bar = tqdm(self.train_loader, desc='训练')     # 进度条
+        progress_bar = tqdm(self.train_loader, desc='训练')
         
         for batch_idx, (images, labels) in enumerate(progress_bar):
             images = images.to(self.device)
-            # images = images.to(self.device, non_blocking=True)
-
+            
             # 确保标签为long类型
             if labels.dtype != torch.long:
                 labels = labels.long()
             labels = labels.to(self.device)
             
-            # 前向传播
-            outputs = self.model(images)
-            loss = self.criterion(outputs, labels)
-            
-            # 反向传播
+            # 清零梯度
             self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+            
+            if self.use_amp and self.scaler is not None:
+                # 混合精度训练
+                with autocast():
+                    outputs = self.model(images)
+                    loss = self.criterion(outputs, labels)
+                
+                # 缩放损失并反向传播
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                # 普通训练
+                outputs = self.model(images)
+                loss = self.criterion(outputs, labels)
+                loss.backward()
+                self.optimizer.step()
+            
+            # 更新学习率（对于OneCycleLR，每一步都需要更新）
+            if self.scheduler_type == 'onecycle':
+                self.scheduler.step()
             
             total_loss += loss.item()
             
@@ -172,8 +196,12 @@ class Trainer:
             self.val_losses.append(val_loss)
             self.val_mious.append(miou)
             
-            # 更新学习率
-            self.scheduler.step(miou)
+            # 更新学习率（对于非OneCycleLR调度器）
+            if self.scheduler_type != 'onecycle':
+                if self.scheduler_type == 'plateau':
+                    self.scheduler.step(miou)  # 基于验证指标更新
+                else:
+                    self.scheduler.step()  # 基于epoch更新
             
             # 打印结果
             print(f"\n结果:")

@@ -102,18 +102,33 @@ class CityscapesDataset(Dataset):
             label_copy[label == k] = v
         return label_copy
 
-def get_transforms(split='train', img_size=(512, 1024)):
+def get_transforms(split='train', img_size=(512, 1024), use_strong_aug=False):
     """获取数据增强转换"""
     if split == 'train':
-        return A.Compose([
-            A.HorizontalFlip(p=0.5),
-            A.RandomBrightnessContrast(p=0.2),
-            A.HueSaturationValue(p=0.2),
-            A.Normalize(mean=[0.485, 0.456, 0.406], 
-                       std=[0.229, 0.224, 0.225]),
-            ToTensorV2(),
-        ])
+        if use_strong_aug:
+            # 更强的数据增强
+            return A.Compose([
+                # A.RandomResizedCrop(height=img_size[0], width=img_size[1], scale=(0.5, 1.0)),
+                A.HorizontalFlip(p=0.5),
+                A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2, rotate_limit=30, p=0.5),
+                A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.3),
+                A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.3),
+                A.Normalize(mean=[0.485, 0.456, 0.406], 
+                           std=[0.229, 0.224, 0.225]),
+                ToTensorV2(),
+            ])
+        else:
+            # 原来的数据增强
+            return A.Compose([
+                A.HorizontalFlip(p=0.5),
+                A.RandomBrightnessContrast(p=0.2),
+                A.HueSaturationValue(p=0.2),
+                A.Normalize(mean=[0.485, 0.456, 0.406], 
+                           std=[0.229, 0.224, 0.225]),
+                ToTensorV2(),
+            ])
     else:
+        # 验证集使用简单的转换
         return A.Compose([
             A.Normalize(mean=[0.485, 0.456, 0.406], 
                        std=[0.229, 0.224, 0.225]),
