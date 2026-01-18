@@ -3,6 +3,11 @@ project:
   name: "Cityscapes_Semantic_Segmentation"
   description: "室外场景语义分割项目"
 
+# 随机种子配置
+seed:
+  value: 42  # 默认随机种子
+  deterministic: true  # 是否使用确定性算法
+
 # 数据配置
 data:
   root_dir: "/home/jianglh1/Cityscapes/data"
@@ -20,8 +25,8 @@ model:
 
 # 训练配置
 training:
-  num_epochs: 40  # 增加epoch数
-  learning_rate: 0.01
+  num_epochs: 50  # 增加epoch数
+  learning_rate: 0.005
   weight_decay: 0.0005  # 增加权重衰减
   device: "cuda"
   
@@ -38,7 +43,7 @@ training:
   
 # 保存配置
 save:
-  dir: "./results2"
+  dir: "./results_seed42_lr0.005_onecycle"
   save_frequency: 5
   
 # 实验跟踪

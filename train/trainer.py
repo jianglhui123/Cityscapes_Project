@@ -18,6 +18,19 @@ class Trainer:
         self.val_loader = val_loader
         self.config = config
         
+        # 设置随机种子（如果提供了）
+        if 'seed' in config:
+            import random
+            import numpy as np
+            import torch
+            
+            seed = config['seed']
+            random.seed(seed)
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed(seed)
+            print(f"Trainer内部随机种子: {seed}")
+
         # 确保配置参数是正确类型
         self._sanitize_config()
         

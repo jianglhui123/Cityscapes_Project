@@ -7,6 +7,7 @@ import os
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+from utils.seed import set_seed, get_dataloader_kwargs
 from data.dataset import CityscapesDataset, get_transforms
 from model.unet import get_model
 from train.trainer import Trainer
@@ -23,7 +24,12 @@ def main():
     parser = argparse.ArgumentParser(description='Cityscapes语义分割训练')
     parser.add_argument('--config', type=str, default='config/config.yaml', help='配置文件路径')
     parser.add_argument('--resume', type=str, help='从检查点恢复训练')
+    parser.add_argument('--seed', type=int, default=42, help='随机种子')
     args = parser.parse_args()
+    
+    # 设置随机种子（在加载配置后，创建模型和数据之前）
+    seed = args.seed
+    set_seed(seed)
     
     # 加载配置
     config = load_config(args.config)
@@ -31,6 +37,9 @@ def main():
     model_config = config['model']
     training_config = config['training']
     save_config = config['save']
+    
+    # 获取DataLoader的随机种子参数
+    dataloader_kwargs = get_dataloader_kwargs(seed)
     
     # 设置设备
     device = torch.device('cuda' if torch.cuda.is_available() and training_config['device'] == 'cuda' else 'cpu')
@@ -67,12 +76,14 @@ def main():
         img_size=tuple(data_config['img_size'])
     )
     
+    # 使用带有随机种子控制的DataLoader
     train_loader = DataLoader(
         train_dataset,
         batch_size=data_config['batch_size'],
         shuffle=True,
         num_workers=data_config['num_workers'],
-        pin_memory=True
+        pin_memory=True,
+        **dataloader_kwargs  # 添加随机种子控制
     )
     
     val_loader = DataLoader(
@@ -80,7 +91,8 @@ def main():
         batch_size=data_config['batch_size'],
         shuffle=False,
         num_workers=data_config['num_workers'],
-        pin_memory=True
+        pin_memory=True,
+        **dataloader_kwargs  # 添加随机种子控制
     )
     
     print(f"训练集: {len(train_dataset)} 样本")
@@ -109,6 +121,7 @@ def main():
         'weight_decay': training_config['weight_decay'],
         'batch_size': data_config['batch_size'],
         'save_dir': save_config['dir'],
+        'seed': seed,  # 传递随机种子
         
         # 添加新的配置项
         'optimizer': training_config.get('optimizer', 'adamw'),
@@ -135,6 +148,7 @@ def main():
     
     print(f"训练完成！最佳mIoU: {trainer.best_miou:.4f}")
     print(f"模型保存在: {save_config['dir']}")
+    print(f"使用的随机种子: {seed}")
 
 if __name__ == "__main__":
     main()
