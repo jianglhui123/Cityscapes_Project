@@ -6,10 +6,10 @@ echo "当前时间: $(date)"
 echo "工作目录: $(pwd)"
 
 # 设置GPU
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=4
 
 # 创建基础目录
-BASE_OUTPUT_DIR="./results/plots"
+BASE_OUTPUT_DIR="./results_seed42_lr0.005_onecycle/plots"
 mkdir -p $BASE_OUTPUT_DIR
 
 # 0. 清空或创建报告文件
@@ -27,7 +27,7 @@ mkdir -p $BEST_MODEL_DIR
 echo -e "\n1. 使用最佳模型进行可视化..."
 echo "输出目录: $BEST_MODEL_DIR"
 python visualize_predictions.py \
-  --model ./results/weights/best_model.pth \
+  --model ./results_seed42_lr0.005_onecycle/weights/best_model.pth \
   --samples 4 \
   --split train \
   --output "$BEST_MODEL_DIR" \

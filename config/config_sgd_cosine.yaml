@@ -1,0 +1,54 @@
+# 项目配置
+project:
+  name: "Cityscapes_Semantic_Segmentation_SGD_Cosine"
+  description: "使用SGD优化器和余弦退火调度器"
+
+# 随机种子配置
+seed:
+  value: 42
+  deterministic: true
+
+# 数据配置
+data:
+  root_dir: "/home/jianglh1/Cityscapes/data"
+  img_size: [512, 1024]
+  batch_size: 16
+  num_workers: 16
+  use_augmentation: true
+  use_strong_aug: true
+
+# 模型配置
+model:
+  name: "unet"
+  num_classes: 19
+
+# 训练配置 - SGD + Cosine
+training:
+  num_epochs: 60  # 增加epoch数，SGD通常需要更多epoch
+  learning_rate: 0.01  # SGD初始学习率通常比Adam大
+  weight_decay: 0.0001  # 权重衰减可以小一点，SGD对权重衰减更敏感
+  device: "cuda"
+  
+  # 优化器配置
+  optimizer: "sgd"
+  scheduler: "cosine"
+  use_amp: true
+  
+  # SGD特定参数
+  momentum: 0.9
+  nesterov: true
+  
+  # 余弦退火调度器配置（带预热）
+  scheduler_config:
+    eta_min: 0.00001  # 最终学习率降到非常小
+    warmup_epochs: 5  # 前5个epoch预热
+  
+# 保存配置
+save:
+  dir: "./results_sgd_cosine"
+  save_frequency: 10
+  
+# 实验跟踪
+logging:
+  use_wandb: false
+  wandb_project: "cityscapes_segmentation"

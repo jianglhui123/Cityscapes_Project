@@ -26,7 +26,7 @@ model:
 # 训练配置
 training:
   num_epochs: 50  # 增加epoch数
-  learning_rate: 0.005
+  learning_rate: 0.001
   weight_decay: 0.0005  # 增加权重衰减
   device: "cuda"
   
@@ -43,7 +43,7 @@ training:
   
 # 保存配置
 save:
-  dir: "./results_seed42_lr0.005_onecycle"
+  dir: "./results_seed42_lr0.001_onecycle"
   save_frequency: 5
   
 # 实验跟踪

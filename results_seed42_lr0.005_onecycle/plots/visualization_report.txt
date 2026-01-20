@@ -1,0 +1,9 @@
+模型预测可视化报告
+生成时间: Wed Jan 21 03:33:59 CST 2026
+工作目录: /home/jianglh1/Cityscapes_Project
+使用的GPU: 4
+
+最佳模型目录 (./results_seed42_lr0.005_onecycle/plots/best_model):
+  - batch_predictions_42.png (大小: 1.4M)
+  总计: 1 个文件
+

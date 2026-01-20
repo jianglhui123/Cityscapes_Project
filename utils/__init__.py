@@ -11,6 +11,7 @@ from .visualize import (
     visualize_predictions
 )
 from .seed import set_seed, seed_worker, get_dataloader_kwargs
+from .logger import setup_logger, get_logger, Logger
 
 __version__ = "1.0.0"
 __all__ = [
@@ -22,4 +23,7 @@ __all__ = [
     "set_seed",
     "seed_worker",
     "get_dataloader_kwargs"
+    "setup_logger",
+    "get_logger",
+    "Logger"
 ]

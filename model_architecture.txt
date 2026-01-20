@@ -1,0 +1,473 @@
+================================================================================
+U-Net 语义分割模型详细架构
+================================================================================
+
+模型总览:
+----------------------------------------
+UNet(
+  (inc): DoubleConv(
+    (double_conv): Sequential(
+      (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (down1): Sequential(
+    (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (1): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (down2): Sequential(
+    (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (1): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (down3): Sequential(
+    (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (1): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (down4): Sequential(
+    (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (1): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(512, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (4): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up1): ConvTranspose2d(1024, 512, kernel_size=(2, 2), stride=(2, 2))
+  (conv1): DoubleConv(
+    (double_conv): Sequential(
+      (0): Conv2d(1024, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (up2): ConvTranspose2d(512, 256, kernel_size=(2, 2), stride=(2, 2))
+  (conv2): DoubleConv(
+    (double_conv): Sequential(
+      (0): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (up3): ConvTranspose2d(256, 128, kernel_size=(2, 2), stride=(2, 2))
+  (conv3): DoubleConv(
+    (double_conv): Sequential(
+      (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (up4): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
+  (conv4): DoubleConv(
+    (double_conv): Sequential(
+      (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (outc): Conv2d(64, 19, kernel_size=(1, 1), stride=(1, 1))
+  (dropout): Dropout2d(p=0.3, inplace=False)
+)
+
+详细层结构:
+----------------------------------------
+inc:
+  类型: DoubleConv
+
+inc.double_conv:
+  类型: Sequential
+
+inc.double_conv.0:
+  类型: Conv2d
+  权重形状: [64, 3, 3, 3]
+  偏置形状: [64]
+
+inc.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [64]
+  偏置形状: [64]
+
+inc.double_conv.2:
+  类型: ReLU
+
+inc.double_conv.3:
+  类型: Conv2d
+  权重形状: [64, 64, 3, 3]
+  偏置形状: [64]
+
+inc.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [64]
+  偏置形状: [64]
+
+inc.double_conv.5:
+  类型: ReLU
+
+down1:
+  类型: Sequential
+
+down1.0:
+  类型: MaxPool2d
+
+down1.1:
+  类型: DoubleConv
+
+down1.1.double_conv:
+  类型: Sequential
+
+down1.1.double_conv.0:
+  类型: Conv2d
+  权重形状: [128, 64, 3, 3]
+  偏置形状: [128]
+
+down1.1.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [128]
+  偏置形状: [128]
+
+down1.1.double_conv.2:
+  类型: ReLU
+
+down1.1.double_conv.3:
+  类型: Conv2d
+  权重形状: [128, 128, 3, 3]
+  偏置形状: [128]
+
+down1.1.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [128]
+  偏置形状: [128]
+
+down1.1.double_conv.5:
+  类型: ReLU
+
+down2:
+  类型: Sequential
+
+down2.0:
+  类型: MaxPool2d
+
+down2.1:
+  类型: DoubleConv
+
+down2.1.double_conv:
+  类型: Sequential
+
+down2.1.double_conv.0:
+  类型: Conv2d
+  权重形状: [256, 128, 3, 3]
+  偏置形状: [256]
+
+down2.1.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [256]
+  偏置形状: [256]
+
+down2.1.double_conv.2:
+  类型: ReLU
+
+down2.1.double_conv.3:
+  类型: Conv2d
+  权重形状: [256, 256, 3, 3]
+  偏置形状: [256]
+
+down2.1.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [256]
+  偏置形状: [256]
+
+down2.1.double_conv.5:
+  类型: ReLU
+
+down3:
+  类型: Sequential
+
+down3.0:
+  类型: MaxPool2d
+
+down3.1:
+  类型: DoubleConv
+
+down3.1.double_conv:
+  类型: Sequential
+
+down3.1.double_conv.0:
+  类型: Conv2d
+  权重形状: [512, 256, 3, 3]
+  偏置形状: [512]
+
+down3.1.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [512]
+  偏置形状: [512]
+
+down3.1.double_conv.2:
+  类型: ReLU
+
+down3.1.double_conv.3:
+  类型: Conv2d
+  权重形状: [512, 512, 3, 3]
+  偏置形状: [512]
+
+down3.1.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [512]
+  偏置形状: [512]
+
+down3.1.double_conv.5:
+  类型: ReLU
+
+down4:
+  类型: Sequential
+
+down4.0:
+  类型: MaxPool2d
+
+down4.1:
+  类型: DoubleConv
+
+down4.1.double_conv:
+  类型: Sequential
+
+down4.1.double_conv.0:
+  类型: Conv2d
+  权重形状: [1024, 512, 3, 3]
+  偏置形状: [1024]
+
+down4.1.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [1024]
+  偏置形状: [1024]
+
+down4.1.double_conv.2:
+  类型: ReLU
+
+down4.1.double_conv.3:
+  类型: Conv2d
+  权重形状: [1024, 1024, 3, 3]
+  偏置形状: [1024]
+
+down4.1.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [1024]
+  偏置形状: [1024]
+
+down4.1.double_conv.5:
+  类型: ReLU
+
+up1:
+  类型: ConvTranspose2d
+  权重形状: [1024, 512, 2, 2]
+  偏置形状: [512]
+
+conv1:
+  类型: DoubleConv
+
+conv1.double_conv:
+  类型: Sequential
+
+conv1.double_conv.0:
+  类型: Conv2d
+  权重形状: [512, 1024, 3, 3]
+  偏置形状: [512]
+
+conv1.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [512]
+  偏置形状: [512]
+
+conv1.double_conv.2:
+  类型: ReLU
+
+conv1.double_conv.3:
+  类型: Conv2d
+  权重形状: [512, 512, 3, 3]
+  偏置形状: [512]
+
+conv1.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [512]
+  偏置形状: [512]
+
+conv1.double_conv.5:
+  类型: ReLU
+
+up2:
+  类型: ConvTranspose2d
+  权重形状: [512, 256, 2, 2]
+  偏置形状: [256]
+
+conv2:
+  类型: DoubleConv
+
+conv2.double_conv:
+  类型: Sequential
+
+conv2.double_conv.0:
+  类型: Conv2d
+  权重形状: [256, 512, 3, 3]
+  偏置形状: [256]
+
+conv2.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [256]
+  偏置形状: [256]
+
+conv2.double_conv.2:
+  类型: ReLU
+
+conv2.double_conv.3:
+  类型: Conv2d
+  权重形状: [256, 256, 3, 3]
+  偏置形状: [256]
+
+conv2.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [256]
+  偏置形状: [256]
+
+conv2.double_conv.5:
+  类型: ReLU
+
+up3:
+  类型: ConvTranspose2d
+  权重形状: [256, 128, 2, 2]
+  偏置形状: [128]
+
+conv3:
+  类型: DoubleConv
+
+conv3.double_conv:
+  类型: Sequential
+
+conv3.double_conv.0:
+  类型: Conv2d
+  权重形状: [128, 256, 3, 3]
+  偏置形状: [128]
+
+conv3.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [128]
+  偏置形状: [128]
+
+conv3.double_conv.2:
+  类型: ReLU
+
+conv3.double_conv.3:
+  类型: Conv2d
+  权重形状: [128, 128, 3, 3]
+  偏置形状: [128]
+
+conv3.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [128]
+  偏置形状: [128]
+
+conv3.double_conv.5:
+  类型: ReLU
+
+up4:
+  类型: ConvTranspose2d
+  权重形状: [128, 64, 2, 2]
+  偏置形状: [64]
+
+conv4:
+  类型: DoubleConv
+
+conv4.double_conv:
+  类型: Sequential
+
+conv4.double_conv.0:
+  类型: Conv2d
+  权重形状: [64, 128, 3, 3]
+  偏置形状: [64]
+
+conv4.double_conv.1:
+  类型: BatchNorm2d
+  权重形状: [64]
+  偏置形状: [64]
+
+conv4.double_conv.2:
+  类型: ReLU
+
+conv4.double_conv.3:
+  类型: Conv2d
+  权重形状: [64, 64, 3, 3]
+  偏置形状: [64]
+
+conv4.double_conv.4:
+  类型: BatchNorm2d
+  权重形状: [64]
+  偏置形状: [64]
+
+conv4.double_conv.5:
+  类型: ReLU
+
+outc:
+  类型: Conv2d
+  权重形状: [19, 64, 1, 1]
+  偏置形状: [19]
+
+dropout:
+  类型: Dropout2d
+
+
+前向传播各层输出形状:
+----------------------------------------
+Input                | 输出形状: [1, 3, 512, 1024]
+Inc (DoubleConv)     | 输出形状: [1, 64, 512, 1024]
+Down1                | 输出形状: [1, 128, 256, 512]
+Down2                | 输出形状: [1, 256, 128, 256]
+Down3                | 输出形状: [1, 512, 64, 128]
+Down4 (瓶颈层)          | 输出形状: [1, 1024, 32, 64]
+Up1 + Conv1          | 输出形状: [1, 512, 64, 128]
+Up2 + Conv2          | 输出形状: [1, 256, 128, 256]
+Up3 + Conv3          | 输出形状: [1, 128, 256, 512]
+Up4 + Conv4          | 输出形状: [1, 64, 512, 1024]
+Output               | 输出形状: [1, 19, 512, 1024]

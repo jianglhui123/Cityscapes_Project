@@ -108,7 +108,6 @@ def get_transforms(split='train', img_size=(512, 1024), use_strong_aug=False):
         if use_strong_aug:
             # 更强的数据增强
             return A.Compose([
-                # A.RandomResizedCrop(height=img_size[0], width=img_size[1], scale=(0.5, 1.0)),
                 A.HorizontalFlip(p=0.5),
                 A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2, rotate_limit=30, p=0.5),
                 A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.3),

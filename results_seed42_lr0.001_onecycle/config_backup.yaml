@@ -1,0 +1,37 @@
+data:
+  batch_size: 16
+  img_size:
+  - 512
+  - 1024
+  num_workers: 16
+  root_dir: /home/jianglh1/Cityscapes/data
+  use_augmentation: true
+  use_strong_aug: true
+logging:
+  use_wandb: false
+  wandb_project: cityscapes_segmentation
+model:
+  name: unet
+  num_classes: 19
+  pretrained: false
+project:
+  description: "\u5BA4\u5916\u573A\u666F\u8BED\u4E49\u5206\u5272\u9879\u76EE"
+  name: Cityscapes_Semantic_Segmentation
+save:
+  dir: ./results_seed42_lr0.001_onecycle
+  save_frequency: 5
+seed:
+  deterministic: true
+  value: 42
+training:
+  device: cuda
+  learning_rate: 0.001
+  num_epochs: 50
+  optimizer: adamw
+  scheduler: onecycle
+  scheduler_config:
+    div_factor: 10
+    final_div_factor: 100
+    pct_start: 0.1
+  use_amp: true
+  weight_decay: 0.0005

@@ -11,6 +11,8 @@ from utils.metrics import calculate_iou, calculate_pixel_accuracy
 from .optimizer import create_optimizer, create_scheduler
 from torch.cuda.amp import autocast, GradScaler
 
+from utils.logger import get_logger
+
 class Trainer:
     def __init__(self, model, train_loader, val_loader, config):
         self.model = model
@@ -31,9 +33,17 @@ class Trainer:
             torch.cuda.manual_seed(seed)
             print(f"Trainer内部随机种子: {seed}")
 
+        # 设置日志记录器
+        self.logger = get_logger()
+
         # 确保配置参数是正确类型
         self._sanitize_config()
         
+        # 记录配置信息
+        self.logger.info("=" * 60)
+        self.logger.info("训练器初始化")
+        self.logger.info("=" * 60)
+
         # 设备设置
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -45,7 +55,13 @@ class Trainer:
             print(f"使用设备: {self.device}")
         
         self.model = self.model.to(self.device)     # 将整个神经网络模型（包括所有层、参数、缓冲区）移动到指定的计算设备上。
-        
+
+        # 记录模型信息
+        total_params = sum(p.numel() for p in model.parameters())
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        self.logger.info(f"模型参数总数: {total_params:,}")
+        self.logger.info(f"可训练参数: {trainable_params:,}") 
+
         # 损失函数 - 忽略255（ignore类）
         self.criterion = nn.CrossEntropyLoss(ignore_index=255)
         
@@ -53,7 +69,7 @@ class Trainer:
         self.use_amp = config.get('use_amp', True) and torch.cuda.is_available()
         if self.use_amp:
             self.scaler = GradScaler()
-            print("启用混合精度训练 (AMP)")
+            self.logger.info("启用混合精度训练 (AMP)")
         else:
             self.scaler = None
         
@@ -83,6 +99,10 @@ class Trainer:
         os.makedirs(config['save_dir'], exist_ok=True)
         os.makedirs(os.path.join(config['save_dir'], 'weights'), exist_ok=True)
         os.makedirs(os.path.join(config['save_dir'], 'plots'), exist_ok=True)
+        os.makedirs(os.path.join(config['save_dir'], 'logs'), exist_ok=True)
+
+        self.logger.info("训练器初始化完成")
+        self.logger.info("-" * 60)
     
     def _sanitize_config(self):
         """清理配置参数，确保类型正确"""
@@ -189,16 +209,21 @@ class Trainer:
     
     def train(self):
         """完整训练过程"""
-        print(f"开始训练，共 {self.config['num_epochs']} 个epoch")
-        print(f"设备: {self.device}")
-        print(f"批次大小: {self.config['batch_size']}")
-        print(f"学习率: {self.config['learning_rate']}")
-        print(f"权重衰减: {self.config['weight_decay']}")
+        self.logger.info("=" * 60)
+        self.logger.info("开始训练")
+        self.logger.info("=" * 60)
+        self.logger.info(f"训练epoch数: {self.config['num_epochs']}")
+        self.logger.info(f"设备: {self.device}")
+        self.logger.info(f"批次大小: {self.config['batch_size']}")
+        self.logger.info(f"学习率: {self.config['learning_rate']}")
+        self.logger.info(f"权重衰减: {self.config['weight_decay']}")
         
+        start_time = time.time()
+
         for epoch in range(self.config['num_epochs']):
-            print(f"\n{'='*50}")
-            print(f"Epoch {epoch+1}/{self.config['num_epochs']}")
-            print(f"{'='*50}")
+            self.logger.info(f"\n{'='*50}")
+            self.logger.info(f"Epoch {epoch+1}/{self.config['num_epochs']}")
+            self.logger.info(f"{'='*50}")
             
             # 训练
             train_loss = self.train_epoch()
@@ -216,12 +241,11 @@ class Trainer:
                 else:
                     self.scheduler.step()  # 基于epoch更新
             
-            # 打印结果
-            print(f"\n结果:")
-            print(f"训练损失: {train_loss:.4f}")
-            print(f"验证损失: {val_loss:.4f}")
-            print(f"验证mIoU: {miou:.4f}")
-            print(f"像素准确率: {pixel_acc:.4f}")
+            # 记录结果
+            self.logger.info(f"训练损失: {train_loss:.6f}")
+            self.logger.info(f"验证损失: {val_loss:.6f}")
+            self.logger.info(f"验证mIoU: {miou:.6f}")
+            self.logger.info(f"像素准确率: {pixel_acc:.6f}")
             
             # 保存最佳模型
             if miou > self.best_miou:
@@ -234,7 +258,8 @@ class Trainer:
                     'miou': miou,
                     'config': self.config
                 }, save_path)
-                print(f"保存最佳模型到 {save_path}，mIoU: {miou:.4f}")
+                self.logger.info(f"✨ 保存最佳模型，mIoU: {miou:.6f} ✨")
+                self.logger.info(f"保存路径: {save_path}")
             
             # 定期保存检查点
             if (epoch + 1) % 10 == 0:
@@ -246,11 +271,19 @@ class Trainer:
                     'miou': miou,
                     'config': self.config
                 }, save_path)
-                print(f"保存检查点到 {save_path}")
+                self.logger.info(f"💾 保存检查点: {save_path}")
         
-        print(f"\n{'='*50}")
-        print(f"训练完成！最佳mIoU: {self.best_miou:.4f}")
-        print(f"{'='*50}")
+        # 计算总训练时间
+        total_time = time.time() - start_time
+        hours = int(total_time // 3600)
+        minutes = int((total_time % 3600) // 60)
+        seconds = int(total_time % 60)
+        
+        self.logger.info(f"\n{'='*60}")
+        self.logger.info("训练完成!")
+        self.logger.info(f"总训练时间: {hours:02d}:{minutes:02d}:{seconds:02d}")
+        self.logger.info(f"最佳mIoU: {self.best_miou:.6f}")
+        self.logger.info(f"{'='*60}")
         
         # 保存最终模型
         final_path = os.path.join(self.config['save_dir'], 'weights', 'final_model.pth')
@@ -259,6 +292,6 @@ class Trainer:
             'config': self.config,
             'best_miou': self.best_miou
         }, final_path)
-        print(f"保存最终模型到 {final_path}")
+        self.logger.info(f"保存最终模型到: {final_path}")
         
         return self.train_losses, self.val_losses, self.val_mious
