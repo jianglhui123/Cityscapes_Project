@@ -6,6 +6,31 @@ CITYSCAPES_CLASSES = [
     'bus', 'train', 'motorcycle', 'bicycle'
 ]
 
+# 类别ID到类别名称的映射
+ID_TO_NAME = {
+    0: 'road',
+    1: 'sidewalk',
+    2: 'building',
+    3: 'wall',
+    4: 'fence',
+    5: 'pole',
+    6: 'traffic light',
+    7: 'traffic sign',
+    8: 'vegetation',
+    9: 'terrain',
+    10: 'sky',
+    11: 'person',
+    12: 'rider',
+    13: 'car',
+    14: 'truck',
+    15: 'bus',
+    16: 'train',
+    17: 'motorcycle',
+    18: 'bicycle',
+    255: 'ignore'
+}
+
+
 # 类别ID映射 (34类 -> 19类)
 ID_TO_TRAINID = {
     0: 255, 1: 255, 2: 255, 3: 255, 4: 255, 5: 255, 6: 255, 7: 0, 8: 1, 9: 255,

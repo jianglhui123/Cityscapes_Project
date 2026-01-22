@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语义分割演示图库</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-height: 100vh;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .upload-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        .upload-label:hover {
+            background: #764ba2;
+        }
+        
+        .gallery-section {
+            margin-top: 30px;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .demo-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .demo-info {
+            padding: 15px;
+        }
+        
+        .demo-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .demo-meta {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .demo-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .demo-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .demo-btn.view {
+            background: #28a745;
+            color: white;
+        }
+        
+        .demo-btn.view:hover {
+            background: #218838;
+        }
+        
+        .demo-btn.process {
+            background: #007bff;
+            color: white;
+        }
+        
+        .demo-btn.process:hover {
+            background: #0056b3;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-image {
+            width: 100%;
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            main {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>语义分割演示图库</h1>
+            <p class="subtitle">选择示例图片进行实时语义分割演示</p>
+            <a href="/" class="back-link">返回主页面</a>
+        </header>
+        
+        <main>
+            <div class="upload-section">
+                <h3>上传新图片到图库</h3>
+                <p>上传城市街景图片到演示图库，支持JPG、PNG格式</p>
+                
+                <label class="upload-label" for="uploadInput">
+                    选择图片上传
+                </label>
+                <input type="file" id="uploadInput" style="display: none;" accept="image/*">
+                
+                <div id="uploadStatus" class="success-message" style="display: none; margin-top: 10px;"></div>
+            </div>
+            
+            {% if error %}
+            <div class="error-message">
+                <strong>错误:</strong> {{ error }}
+            </div>
+            {% endif %}
+            
+            <div class="gallery-section">
+                <h3>示例图片库</h3>
+                
+                {% if not demo_images %}
+                <div class="empty-state">
+                    <div style="font-size: 3em; margin-bottom: 20px;">📷</div>
+                    <h3>图库为空</h3>
+                    <p>请上传一些图片到图库，或等待系统生成示例图片</p>
+                </div>
+                {% else %}
+                <div class="gallery-grid">
+                    {% for image in demo_images %}
+                    <div class="demo-card" data-image="{{ image.path }}">
+                        <img src="{{ url_for('static', filename=image.path) }}" 
+                             alt="{{ image.name }}" class="demo-image">
+                        <div class="demo-info">
+                            <div class="demo-name">{{ image.name }}</div>
+                            <div class="demo-meta">
+                                {{ image.size }} KB | {{ image.created }}
+                            </div>
+                            <div class="demo-actions">
+                                <button class="demo-btn view" onclick="previewImage('{{ image.path }}', '{{ image.name }}')">
+                                    预览
+                                </button>
+                                <button class="demo-btn process" onclick="processImage('{{ image.path }}', '{{ image.name }}')">
+                                    处理
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </main>
+        
+        <footer>
+            <p>Cityscapes语义分割演示系统 &copy; 2024</p>
+            <p>共 {{ demo_images|length }} 张演示图片</p>
+        </footer>
+    </div>
+    
+    <!-- 图片预览模态框 -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">图片预览</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="预览" class="modal-image">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 处理结果模态框 -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="resultTitle">处理结果</h3>
+                <button class="modal-close" onclick="closeResultModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="resultBody">
+                <!-- 结果内容将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let currentProcessingImage = null;
+        
+        // 图片上传功能
+        document.getElementById('uploadInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const statusDiv = document.getElementById('uploadStatus');
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            statusDiv.textContent = '正在上传...';
+            statusDiv.className = 'success-message';
+            statusDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/upload_demo', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.textContent = '上传成功！页面将自动刷新...';
+                    statusDiv.className = 'success-message';
+                    
+                    // 3秒后刷新页面
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    statusDiv.textContent = '上传失败: ' + (result.error || '未知错误');
+                    statusDiv.className = 'error-message';
+                }
+            } catch (error) {
+                statusDiv.textContent = '网络错误: ' + error.message;
+                statusDiv.className = 'error-message';
+            }
+        });
+        
+        // 图片预览功能
+        function previewImage(imagePath, imageName) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            modalImage.src = '/static/' + imagePath;
+            modalTitle.textContent = '预览: ' + imageName;
+            modal.style.display = 'flex';
+            
+            // 点击模态框背景关闭
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+        
+        // 图片处理功能
+        async function processImage(imagePath, imageName) {
+            currentProcessingImage = { path: imagePath, name: imageName };
+            
+            const resultModal = document.getElementById('resultModal');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultBody = document.getElementById('resultBody');
+            
+            resultTitle.textContent = '正在处理: ' + imageName;
+            resultBody.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>正在对图片进行语义分割分析，请稍候...</p>
+                </div>
+            `;
+            resultModal.style.display = 'flex';
+            
+            try {
+                // 获取图片的完整URL
+                const imageUrl = '/static/' + imagePath;
+                
+                // 第一步：获取图片
+                const imageResponse = await fetch(imageUrl);
+                const imageBlob = await imageResponse.blob();
+                
+                // 第二步：发送到后端处理
+                const formData = new FormData();
+                formData.append('file', imageBlob, imageName);
+                
+                const processResponse = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await processResponse.json();
+                
+                if (result.error) {
+                    resultBody.innerHTML = `
+                        <div class="error-message">
+                            <strong>处理失败:</strong> ${result.error}
+                        </div>
+                        <button onclick="retryProcess()" style="
+                            display: block;
+                            margin: 20px auto;
+                            padding: 10px 20px;
+                            background: #007bff;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">重试</button>
+                    `;
+                } else if (result.success) {
+                    // 显示处理结果
+                    resultBody.innerHTML = `
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <p><strong>推理时间:</strong> ${result.inference_time.toFixed(3)} 秒</p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            <div>
+                                <h4>原始图像</h4>
+                                <img src="data:image/png;base64,${result.original}" 
+                                     style="width: 100%; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <h4>分割结果</h4>
+                                <img src="data:image/png;base64,${result.prediction}" 
+                                     style="width: 100%; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <h4>叠加效果</h4>
+                                <img src="data:image/png;base64,${result.overlay}" 
+                                     style="width: 100%; border-radius: 5px;">
+                            </div>
+                        </div>
+                        
+                        <h4>类别统计</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background: #667eea; color: white;">
+                                    <th style="padding: 10px; text-align: left;">类别</th>
+                                    <th style="padding: 10px; text-align: left;">颜色</th>
+                                    <th style="padding: 10px; text-align: left;">像素数量</th>
+                                    <th style="padding: 10px; text-align: left;">占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTableBody">
+                                <!-- 统计数据将通过JavaScript填充 -->
+                            </tbody>
+                        </table>
+                        
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button onclick="downloadResult()" style="
+                                padding: 10px 20px;
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                margin: 0 10px;
+                            ">下载结果</button>
+                            
+                            <button onclick="processAnother()" style="
+                                padding: 10px 20px;
+                                background: #007bff;
+                                color: white;
+                                border: none;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                margin: 0 10px;
+                            ">处理另一张</button>
+                        </div>
+                    `;
+                    
+                    // 填充统计数据
+                    const statsBody = document.getElementById('statsTableBody');
+                    result.stats.forEach(stat => {
+                        const row = document.createElement('tr');
+                        row.style.borderBottom = '1px solid #ddd';
+                        
+                        row.innerHTML = `
+                            <td style="padding: 10px;">${stat.class_name}</td>
+                            <td style="padding: 10px;">
+                                <div style="display: inline-block; width: 20px; height: 20px; 
+                                     background-color: rgb(${stat.color[0]}, ${stat.color[1]}, ${stat.color[2]});
+                                     border-radius: 3px; margin-right: 10px; vertical-align: middle;"></div>
+                                RGB(${stat.color.join(', ')})
+                            </td>
+                            <td style="padding: 10px;">${stat.pixels.toLocaleString()}</td>
+                            <td style="padding: 10px;">${stat.percentage.toFixed(2)}%</td>
+                        `;
+                        
+                        statsBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                resultBody.innerHTML = `
+                    <div class="error-message">
+                        <strong>处理失败:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function retryProcess() {
+            if (currentProcessingImage) {
+                processImage(currentProcessingImage.path, currentProcessingImage.name);
+            }
+        }
+        
+        function closeResultModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+        
+        function downloadResult() {
+            alert('下载功能需要在后端实现，这里可以添加文件下载逻辑');
+            // 实际实现中，这里可以调用后端API下载处理结果
+        }
+        
+        function processAnother() {
+            closeResultModal();
+        }
+        
+        // 点击模态框背景关闭
+        document.getElementById('resultModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeResultModal();
+            }
+        });
+        
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // 页面加载完成后，为上传标签添加点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.upload-label').addEventListener('click', function() {
+                document.getElementById('uploadInput').click();
+            });
+        });
+    </script>
+</body>
+</html>
